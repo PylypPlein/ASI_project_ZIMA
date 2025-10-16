@@ -1,7 +1,5 @@
 # asi-ml — Project
 
-Template repository for the project
-
 ---
 
 ## Project Overview
@@ -17,7 +15,11 @@ The goal is to build a machine learning model that predicts whether a passenger 
 [Airline Passenger Satisfaction Dataset — Kaggle](https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction)
 
 **License:**
-CC BY-NC-SA 4.0 (Creative Commons Attribution–NonCommercial–ShareAlike 4.0)
+The dataset “Airline Passenger Satisfaction” by TJ Klein is available on Kaggle
+ under the license type “Other (specified in description)”.
+Since the author did not specify a standard open license, the dataset is used in this project for educational and non-commercial purposes only, in accordance with Kaggle’s Terms of Service (featuring CC0: Public Domain specification).
+Users should credit the dataset’s author when sharing or reproducing related work.
+If the dataset author later defines an explicit license, those terms shall take precedence.
 
 **Date of Download:** October 16, 2025
 
