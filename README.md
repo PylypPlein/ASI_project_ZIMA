@@ -30,8 +30,10 @@ The target variable `satisfaction` has two possible values:
 The goal of this project is to **predict passenger satisfaction** based on their demographic characteristics and flight experience.
 
 **Sample size:**
-A sample of 500 rows was included in the repository
-(`data/01_raw/airline_satisfaction_sample.csv`).
+A sample of 1000 rows was included in the repository
+(`ASI_project_ZIMA/data/01_raw
+/sample_dummy.csv
+`).
 
 ---
 
