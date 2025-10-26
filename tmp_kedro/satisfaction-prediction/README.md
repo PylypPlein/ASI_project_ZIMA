@@ -98,3 +98,31 @@ To automatically strip out all output cell contents before committing to `git`, 
 ## Package your Kedro project
 
 [Further information about building project documentation and packaging your project](https://docs.kedro.org/en/stable/tutorial/package_a_project.html)
+
+## Experiment Tracking with Weights & Biases (W&B)
+
+During Sprint 2, experiment tracking was implemented using **Weights & Biases (W&B)**.
+
+Each time the Kedro pipeline is executed (`kedro run`), model training and evaluation
+results are automatically logged to W&B. Logged information includes:
+- Model parameters (from the `params` configuration)
+- Evaluation metrics (e.g., F1-score)
+
+### How to enable W&B logging locally
+
+1. **Install the W&B library:**
+   ```bash
+   pip install wandb
+Log in to your W&B account:
+
+
+
+wandb login
+You can find your API key here: https://wandb.ai
+
+Run the Kedro pipeline:
+
+
+kedro run
+After running the pipeline, all metrics and configuration details will appear
+in the W&B project dashboard
