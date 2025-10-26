@@ -13,7 +13,7 @@ def train_baseline(X_train, y_train, params):
     Jako argumenty przyjmuje dane treningowe X_train, y_train oraz parametry modelu.
     """
 
-    # Uruchamiamy nowy eksperyment w Weights & Biases (W&B)
+    # Uruchamiamy nowy eksperyment w W&B
     # Wartość "project" to nazwa projektu naszego zespołu w serwisie W&B
     # Wartość "config=params" pozwala zapisać w logach jakie hiperparametry miały wpływ na wynik
     wandb.init(project="asi-ml", job_type="train", reinit=True, config=params)
