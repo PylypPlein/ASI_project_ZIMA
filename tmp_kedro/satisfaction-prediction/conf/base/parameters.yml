@@ -1,0 +1,2 @@
+data_path: "../data/01_raw/sample.csv"
+target_col: "satisfaction"
