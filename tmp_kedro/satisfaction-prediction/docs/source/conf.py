@@ -206,8 +206,14 @@ def remove_arrows_in_examples(lines):
         lines[i] = line.replace(">>>", "")
 
 
+# ruff: noqa: PLR0913
+
+
 def autodoc_process_docstring(app, what, name, obj, options, lines):
     remove_arrows_in_examples(lines)
+
+
+# ruff: noqa: PLR0913
 
 
 def skip(app, what, name, obj, skip, options):
