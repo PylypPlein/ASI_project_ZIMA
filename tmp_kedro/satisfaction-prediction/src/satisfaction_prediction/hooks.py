@@ -19,6 +19,7 @@ class SparkHooks:
             SparkSession.builder.appName(context.project_path.name)
             .enableHiveSupport()
             .config(conf=spark_conf)
+            .config("spark.security.credentials.enabled", "false")
         )
         _spark_session = spark_session_conf.getOrCreate()
         _spark_session.sparkContext.setLogLevel("WARN")
