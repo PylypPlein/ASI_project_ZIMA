@@ -51,3 +51,8 @@ It helps assess how well the classifier identifies both satisfied and dissatisfi
 ---
 
 ## Project Structure
+
+## Kedro quickstart
+kedro run
+# lub
+kedro run --pipeline second_sprint_pipeline
