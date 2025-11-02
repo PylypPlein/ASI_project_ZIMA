@@ -53,6 +53,7 @@ It helps assess how well the classifier identifies both satisfied and dissatisfi
 ## Project Structure
 
 ## Kedro quickstart
+Kedro project path = ASI_project_ZIMA\tmp_kedro\satisfaction-prediction
 kedro run
 # lub
 kedro run --pipeline second_sprint_pipeline
