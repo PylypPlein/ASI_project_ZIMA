@@ -1,5 +1,6 @@
 data_path: "../data/01_raw/sample.csv"
 target_col: "satisfaction"
+random_state: 10
 
 split:
   test_size: 0.2
@@ -9,3 +10,10 @@ split:
 model:
   kind: "logreg"
   max_iter: 1000
+
+autogluon:
+    time_limit: 120
+    presets: "medium_quality_faster_train"
+    problem_type: "binary"
+    label: "target"
+    eval_metric: "roc_auc"
