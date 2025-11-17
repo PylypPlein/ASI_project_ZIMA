@@ -1,45 +1,21 @@
-"""
-This is a boilerplate pipeline 'second_sprint_pipeline'
-generated using Kedro 1.0.0
-"""
-
-import wandb
-from sklearn.metrics import f1_score
-
-
-def train_baseline(X_train, y_train, params):
-    """
-    Funkcja trenuje podstawowy model (tzw. baseline).
-    Jako argumenty przyjmuje dane treningowe X_train, y_train oraz parametry modelu.
-    """
-
-    # Uruchamiamy nowy eksperyment w W&B
-    # Wartość "project" to nazwa projektu naszego zespołu w serwisie W&B
-    # Wartość "config=params" pozwala zapisać w logach jakie hiperparametry miały wpływ na wynik
-    wandb.init(project="asi-ml", job_type="train", reinit=True, config=params)
-
-    # Tutaj odbywa się właściwy trening modelu.
-    # W tym miejscu zespół wstawia kod, który tworzy i trenuje model np.:
-    # model = LogisticRegression(**params)
-
-    # model.fit(X_train, y_train)
-
-    model = ...  # w tym miejscu powstaje wytrenowany model
-
-    # W razie potrzeby można tu też zalogować wynik treningu na zbiorze uczącym:
-    # wandb.log({"train_score": model.score(X_train, y_train)})
-
-    # Nie zamykamy jeszcze sesji wandb.finish(),
-    # bo chcemy, żeby metryki z ewaluacji modelu zapisały się w tym samym runie.
-    # Zakończenie logowania nastąpi w funkcji evaluate().
-# src/nodes.py
-import numpy as np
 import pandas as pd
+import numpy as np
+from typing import Any, Dict
+import logging
+
+# --- Wymagane importy ---
+from autogluon.tabular import TabularPredictor
 from scipy import stats
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_squared_error, roc_auc_score
 from sklearn.model_selection import train_test_split as sk_split
 
+# Ustawienie loggera
+log = logging.getLogger(__name__)
+
+
+# ==============================================================================
+# 1. FUNKCJE PRZETWARZANIA DANYCH
+# (Niezbędne do przygotowania X_train, y_train dla AutoGluon)
+# ==============================================================================
 
 def load_raw(data_path: str) -> pd.DataFrame:
     """Load raw CSV and strip column names."""
@@ -65,20 +41,10 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
 
     # Fill missing ratings with column mean
     rating_columns = [
-        "Inflight wifi service",
-        "Departure/Arrival time convenient",
-        "Ease of Online booking",
-        "Gate location",
-        "Food and drink",
-        "Online boarding",
-        "Seat comfort",
-        "Inflight entertainment",
-        "On-board service",
-        "Leg room service",
-        "Baggage handling",
-        "Checkin service",
-        "Inflight service",
-        "Cleanliness",
+        "Inflight wifi service", "Departure/Arrival time convenient", "Ease of Online booking",
+        "Gate location", "Food and drink", "Online boarding", "Seat comfort",
+        "Inflight entertainment", "On-board service", "Leg room service",
+        "Baggage handling", "Checkin service", "Inflight service", "Cleanliness",
     ]
     for col in rating_columns:
         mean_val = df.loc[df[col] != 0, col].mean()
@@ -89,12 +55,7 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
     df["Arrival Delay in Minutes"] = df["Arrival Delay in Minutes"].fillna(0)
 
     # Remove outliers
-    numeric_cols = [
-        "Age",
-        "Flight Distance",
-        "Departure Delay in Minutes",
-        "Arrival Delay in Minutes",
-    ]
+    numeric_cols = ["Age", "Flight Distance", "Departure Delay in Minutes", "Arrival Delay in Minutes"]
     z_scores = np.abs(stats.zscore(df[numeric_cols]))
     threshold = 5
     df = df[(z_scores < threshold).all(axis=1)]
@@ -103,7 +64,7 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def split_data(
-    df: pd.DataFrame, target_col: str, test_size: float = 0.2, random_state: int = 42
+        df: pd.DataFrame, target_col: str, test_size: float = 0.2, random_state: int = 42
 ):
     """Split dataset into train and test sets."""
     X = df.drop(columns=[target_col])
@@ -114,24 +75,102 @@ def split_data(
     return X_train, X_test, y_train, y_test
 
 
-def train_baseline(X_train, y_train, params=None):
-    """Train a simple logistic regression baseline model."""
-    if params is None:
-        params = {"max_iter": 200}
-    model = LogisticRegression(**params)
-    model.fit(X_train, y_train)
-    return model
+# ==============================================================================
+# 2. FUNKCJE AUTOGLUON (IMPLEMENTACJA ZADANIA 2)
+# ==============================================================================
 
+def train_autogluon(X_train: pd.DataFrame, y_train: pd.Series, params: Dict[str, Any]) -> TabularPredictor:
+    """
+    Trenuje model AutoGluon na danych treningowych, używając konfiguracji z parameters.yml.
 
-def evaluate(model, X_test, y_test) -> dict:
-    """Evaluate the model and return metrics."""
-    y_pred = model.predict(X_test)
-    y_prob = (
-        model.predict_proba(X_test)[:, 1] if hasattr(model, "predict_proba") else None
+    Args:
+        X_train: Ramka danych cech treningowych.
+        y_train: Seria danych zmiennej celu treningowej.
+        params: Parametry konfiguracyjne Kedro (powinny zawierać sekcję 'autogluon').
+
+    Returns:
+        Wytrenowany predyktor AutoGluon.
+    """
+    ag_params = params["autogluon"]
+    label_col = ag_params["label"]
+    
+    # AutoGluon wymaga, aby cechy i etykieta były połączone
+    train_data = X_train.copy()
+    train_data[label_col] = y_train
+
+    time_limit = ag_params.get("time_limit")
+    presets = ag_params.get("presets")
+    problem_type = ag_params.get("problem_type")
+    eval_metric = ag_params.get("eval_metric")
+    
+    # Używamy globalnego seeda dla powtarzalności
+    seed = params.get("run_params", {}).get("random_state", 42)
+
+    log.info(f"Rozpoczynam trenowanie AutoGluon (Seed: {seed}, Limit: {time_limit}s)")
+
+    # Ścieżka do zapisu tymczasowych modeli AG (wybieramy folder, który Kedro nie śledzi)
+    save_path = "data/06_models/autogluon_temp_output"
+
+    predictor = TabularPredictor(
+        label=label_col,
+        problem_type=problem_type,
+        eval_metric=eval_metric,
+        path=save_path,
+        verbosity=2 
+    ).fit(
+        train_data=train_data,
+        time_limit=time_limit,
+        presets=presets,
+        seed=seed,
     )
+
+    log.info("Trening AutoGluon zakończony.")
+    return predictor
+
+
+def evaluate_autogluon(ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str, Any]:
+    """
+    Ocenia wytrenowany predyktor AutoGluon na zbiorze testowym i zwraca metryki do MetricsDataSet.
+    """
+    log.info("Rozpoczynanie ewaluacji AutoGluon na zbiorze testowym.")
+    
+    # Łączymy dane testowe dla wbudowanej metody evaluate
+    temp_test_data = X_test.copy()
+    temp_test_data[ag_predictor.label] = y_test
+    
+    # Ocena AutoGluon
+    ag_metrics_raw = ag_predictor.evaluate(temp_test_data, silent=True)
+    
+    # Przygotowanie metryk dla Kedro MetricsDataSet
+    metrics = {
+        f"ag_test_score_{ag_predictor.eval_metric}": ag_metrics_raw[ag_predictor.eval_metric],
+        "ag_test_error_rate": ag_metrics_raw.get('error_rate', 0.0),
+        "ag_roc_auc": ag_metrics_raw.get('roc_auc', 0.0) 
+    }
+
+    log.info(f"Metryki AutoGluon na zbiorze testowym: {metrics}")
+
+    # Feature Importance (logowanie)
     try:
-        roc_auc = roc_auc_score(y_test, y_prob)
-        return {"roc_auc": roc_auc}
-    except Exception:
-        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-        return {"rmse": rmse}
+        feature_importance_df = ag_predictor.feature_importance(
+            X_test, 
+            y_test, 
+            model=ag_predictor.get_best_model(),
+            subsample_size=50000 
+        )
+        log.info("\nTop 5 Feature Importance:")
+        log.info("\n" + feature_importance_df.head(5).to_markdown())
+
+    except Exception as e:
+        log.warning(f"Nie udało się obliczyć Feature Importance: {e}")
+    
+    return metrics
+
+
+def save_best_model(ag_predictor: TabularPredictor) -> TabularPredictor:
+    """
+    Zwraca obiekt TabularPredictor. Ten nod jest opcjonalny; jego głównym celem 
+    jest zapisanie modelu do 'ag_model' przez PickleDataSet.
+    """
+    log.info(f"Zapisywanie obiektu TabularPredictor jako 'ag_model'.")
+    return ag_predictor

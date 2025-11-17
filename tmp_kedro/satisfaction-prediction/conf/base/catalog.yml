@@ -1,28 +1,37 @@
 raw_data:
-  type: pandas.CSVDataSet
+  type: kedro_datasets.pandas.CSVDataSet
   filepath: data/01_raw/sample.csv
 
 clean_data:
-  type: pandas.ParquetDataSet
+  type: kedro_datasets.pandas.ParquetDataSet # Ujednolicone
   filepath: data/02_interim/clean.parquet
 
 X_train:
-  type: pandas.ParquetDataSet
+  type: kedro_datasets.pandas.ParquetDataSet # Ujednolicone
   filepath: data/03_processed/X_train.parquet
 X_test:
-  type: pandas.ParquetDataSet
+  type: kedro_datasets.pandas.ParquetDataSet # Ujednolicone
   filepath: data/03_processed/X_test.parquet
 y_train:
-  type: pandas.ParquetDataSet
+  type: kedro_datasets.pandas.ParquetDataSet # Ujednolicone
   filepath: data/03_processed/y_train.parquet
 y_test:
-  type: pandas.ParquetDataSet
+  type: kedro_datasets.pandas.ParquetDataSet # Ujednolicone
   filepath: data/03_processed/y_test.parquet
 
 model_baseline:
-  type: pickle.PickleDataSet
+  type: kedro_datasets.pickle.PickleDataSet # Ujednolicone
   filepath: data/06_models/model_baseline.pkl
 
 metrics_baseline:
-  type: tracking.MetricsDataSet
+  type: kedro_datasets.tracking.MetricsDataSet # Ujednolicone
   filepath: data/09_tracking/metrics_baseline.json
+
+
+ag_model:
+  type: kedro_datasets.pickle.PickleDataSet # Ujednolicone
+  filepath: data/06_models/ag_production.pkl
+
+ag_metrics:
+  type: kedro_datasets.tracking.MetricsDataSet # Ujednolicone
+  filepath: data/09_tracking/ag_metrics.json
