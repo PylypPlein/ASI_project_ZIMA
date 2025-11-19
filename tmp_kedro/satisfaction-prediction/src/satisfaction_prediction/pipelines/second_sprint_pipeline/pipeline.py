@@ -41,7 +41,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             # 2. TRENING I EWALUACJA AUTOGLUON (po split)
             node(
                 func=train_autogluon,
-                inputs=["X_train", "y_train", "params"],  # 'params' zawiera parametry dla AutoGluon
+                inputs=["X_train", "y_train", "params:autogluon"],  # 'params' zawiera parametry dla AutoGluon
                 outputs="ag_predictor",
                 name="train_autogluon_node",
             ),

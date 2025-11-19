@@ -54,4 +54,4 @@ threshold = 5
 df = df[(z_scores < threshold).all(axis=1)]
 
 
-df.to_csv("../../data/01_raw/sample_clean.csv", index=False)
+df.to_csv("../../data/01_raw/sample.csv", index=False)
