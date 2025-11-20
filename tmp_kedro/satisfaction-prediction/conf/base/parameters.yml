@@ -1,4 +1,4 @@
-data_path: "../data/01_raw/sample_raw.csv"
+data_path: "../../data/01_raw/sample_raw.csv"
 target_col: "satisfaction"
 
 run_params:
@@ -9,8 +9,8 @@ run_params:
   random_state: 10
 
 autogluon:
-  time_limit: 120
-  presets: "medium_quality_faster_train"
+  time_limit: 480
+  presets: "best_quality"
   problem_type: "binary"
   label: "target"
   eval_metric: "roc_auc"

@@ -2,14 +2,23 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict
 import logging
+import os
+import time
+from pathlib import Path
 
-# --- Wymagane importy ---
 from autogluon.tabular import TabularPredictor
 from scipy import stats
 from sklearn.model_selection import train_test_split as sk_split
 from sklearn.model_selection import train_test_split
+import wandb  # logowanie eksperymentów do Weights & Biases
+
 # Ustawienie loggera
 log = logging.getLogger(__name__)
+
+# --- Konfiguracja W&B ---
+WANDB_PROJECT = os.getenv("WANDB_PROJECT", "asi-ml-satisfaction")  # nazwa projektu w W&B
+WANDB_ENTITY = os.getenv("WANDB_ENTITY", None)  # opcjonalnie nazwa teamu / organizacji
+wandb_run = None  # globalny uchwyt na aktualny run W&B
 
 
 # ==============================================================================
@@ -36,7 +45,6 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
         "Class": {"Business": 2, "Eco Plus": 1, "Eco": 0},
         "satisfaction": {"satisfied": 1, "neutral or dissatisfied": 0}
     }
-
 
     for col, mapping in mappings.items():
         if col in df.columns:
@@ -67,7 +75,6 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
 def split_data(df: pd.DataFrame, target_col: str, run_params: dict):
     """Split dataset into train/test sets with optional stratification."""
 
@@ -95,13 +102,20 @@ def split_data(df: pd.DataFrame, target_col: str, run_params: dict):
 
     return X_train, X_test, y_train, y_test
 
+
 # ==============================================================================
-# 2. FUNKCJE AUTOGLUON (IMPLEMENTACJA ZADANIA 2)
+# 2. FUNKCJE AUTOGLUON + W&B
 # ==============================================================================
 
 def train_autogluon(X_train, y_train, params):
+    """
+    Trenuje model AutoGluon TabularPredictor.
+    Każdy `kedro run` = jeden eksperyment zalogowany w W&B.
+    """
     from autogluon.tabular import TabularPredictor
     import numpy as np
+
+    global wandb_run  # korzystamy z globalnego runu W&B
 
     label_col = params["label"]
 
@@ -117,9 +131,6 @@ def train_autogluon(X_train, y_train, params):
             "Sprawdź dane źródłowe i kolumnę etykiet."
         )
 
-    #X_train_clean = train_data.drop(columns=[label_col])
-    #y_train_clean = train_data[label_col]
-
     time_limit = params.get("time_limit")
     presets = params.get("presets")
     problem_type = params.get("problem_type")
@@ -128,6 +139,34 @@ def train_autogluon(X_train, y_train, params):
 
     save_path = "data/06_models/autogluon_temp_output"
 
+    # --- Start runu W&B i zapis parametrów eksperymentu ---
+    wandb_config = {
+        "autogluon": {
+            "time_limit": time_limit,
+            "presets": presets,
+            "problem_type": problem_type,
+            "eval_metric": eval_metric,
+        },
+        "label": label_col,
+        "n_train_rows": len(train_data),
+        "n_features": len(X_train.columns),
+        "random_state": seed,
+    }
+
+    try:
+        log.info(f"Uruchamianie eksperymentu W&B: project={WANDB_PROJECT}, entity={WANDB_ENTITY}")
+        wandb_run = wandb.init(
+            project=WANDB_PROJECT,
+            entity=WANDB_ENTITY,
+            job_type="ag-train",
+            config=wandb_config,
+        )
+    except Exception as e:
+        log.warning(f"Nie udało się zainicjalizować W&B (działam dalej bez logowania): {e}")
+        wandb_run = None
+
+    # --- Trening AutoGluon + logowanie czasu treningu do W&B ---
+    start_time = time.time()
     predictor = TabularPredictor(
         label=label_col,
         problem_type=problem_type,
@@ -140,17 +179,24 @@ def train_autogluon(X_train, y_train, params):
         presets=presets,
         ag_args_fit={"seed": seed},
     )
+    train_time_s = time.time() - start_time
+
+    if wandb_run is not None:
+        try:
+            wandb_run.log({"train_time_s": train_time_s})
+        except Exception as e:
+            log.warning(f"Nie udało się zalogować czasu treningu do W&B: {e}")
 
     return predictor
-
-
-
 
 
 def evaluate_autogluon(ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str, Any]:
     """
     Ocenia wytrenowany predyktor AutoGluon na zbiorze testowym i zwraca metryki do MetricsDataSet.
+    Dodatkowo loguje metryki i feature importance do W&B.
     """
+    global wandb_run
+
     log.info("Rozpoczynanie ewaluacji AutoGluon na zbiorze testowym.")
 
     temp_test_data = X_test.copy()
@@ -166,26 +212,70 @@ def evaluate_autogluon(ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_t
 
     log.info(f"Metryki AutoGluon na zbiorze testowym: {metrics}")
 
+    # --- Logowanie metryk testowych do W&B ---
+    if wandb_run is not None:
+        try:
+            log_dict = {k: float(v) for k, v in metrics.items() if v is not None}
+            wandb_run.log(log_dict)
+        except Exception as e:
+            log.warning(f"Nie udało się zalogować metryk testowych do W&B: {e}")
+
+    # --- Feature importance + logowanie top 5 do W&B ---
     try:
         feature_importance_df = ag_predictor.feature_importance(
-            X_test, 
-            y_test, 
-            model=ag_predictor.get_best_model(),
-            subsample_size=50000 
+            temp_test_data,
+            subsample_size=50000
         )
         log.info("\nTop 5 Feature Importance:")
         log.info("\n" + feature_importance_df.head(5).to_markdown())
 
+        if wandb_run is not None:
+            wandb_run.log(
+                {"feature_importance_top5": wandb.Table(dataframe=feature_importance_df.head(5))}
+            )
+
     except Exception as e:
         log.warning(f"Nie udało się obliczyć Feature Importance: {e}")
-    
+
     return metrics
 
 
 def save_best_model(ag_predictor: TabularPredictor) -> TabularPredictor:
     """
-    Zwraca obiekt TabularPredictor. Ten nod jest opcjonalny; jego głównym celem 
-    jest zapisanie modelu do 'ag_model' przez PickleDataSet.
+    Zwraca obiekt TabularPredictor.
+    Ten node:
+    - pozwala Kedro zapisać model do 'ag_model' (PickleDataSet),
+    - dodatkowo zapisuje model na dysk i loguje go jako artefakt W&B.
     """
+    global wandb_run
+
     log.info(f"Zapisywanie obiektu TabularPredictor jako 'ag_model'.")
+
+    # --- Ręczny zapis modelu do pliku, który potem stanie się artefaktem W&B ---
+    model_path = Path("data/06_models/ag_production.pkl")
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        import joblib
+        joblib.dump(ag_predictor, model_path)
+        log.info(f"Zapisano model AutoGluon do pliku: {model_path}")
+    except Exception as e:
+        log.warning(f"Nie udało się zapisać modelu lokalnie: {e}")
+
+    # --- Logowanie modelu jako artefakt W&B z aliasem 'candidate' ---
+    if wandb_run is not None and model_path.exists():
+        try:
+            art = wandb.Artifact("ag_model", type="model")
+            art.add_file(str(model_path))
+            wandb_run.log_artifact(art, aliases=["candidate"])
+            log.info("Zalogowano artefakt modelu do W&B (ag_model:candidate).")
+        except Exception as e:
+            log.warning(f"Nie udało się zalogować artefaktu modelu do W&B: {e}")
+        finally:
+            try:
+                wandb_run.finish()
+            except Exception:
+                pass
+
+    # Kedro dalej zapisze ten sam obiekt do ag_model (PickleDataSet)
     return ag_predictor
