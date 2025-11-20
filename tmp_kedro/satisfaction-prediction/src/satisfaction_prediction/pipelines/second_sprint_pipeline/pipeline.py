@@ -1,13 +1,14 @@
 from kedro.pipeline import Pipeline, node
+
 from .nodes import (
+    basic_clean,
+    evaluate_autogluon,
     # Nody do przetwarzania danych
     load_raw,
-    basic_clean,
+    save_best_model,
     split_data,
     # Nody AutoGluon (Zadanie 2)
     train_autogluon,
-    evaluate_autogluon,
-    save_best_model,
 )
 
 
@@ -37,11 +38,14 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs=["X_train", "X_test", "y_train", "y_test"],
                 name="split_data_node",
             ),
-
             # 2. TRENING I EWALUACJA AUTOGLUON (po split)
             node(
                 func=train_autogluon,
-                inputs=["X_train", "y_train", "params:autogluon"],  # 'params' zawiera parametry dla AutoGluon
+                inputs=[
+                    "X_train",
+                    "y_train",
+                    "params:autogluon",
+                ],  # 'params' zawiera parametry dla AutoGluon
                 outputs="ag_predictor",
                 name="train_autogluon_node",
             ),

@@ -74,6 +74,7 @@ line-length = 88
 show-fixes = true
 
 [tool.ruff.lint]
+ignore = ["E501","PLW0602", "PLW0603"]
 select = [
     "F",   # Pyflakes
     "W",   # pycodestyle
@@ -83,7 +84,6 @@ select = [
     "PL",  # Pylint
     "T201", # Print Statement
 ]
-ignore = ["E501"]  # Ruff format takes care of line-too-long
 
 [tool.kedro_telemetry]
 project_id = "b4c7fc51d6824d04a8ef6e15dd2f33a8"
