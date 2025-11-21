@@ -1,30 +1,29 @@
-import pandas as pd
-import numpy as np
-from typing import Any, Dict
 import logging
 import os
 import time
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 from autogluon.tabular import TabularPredictor
 from scipy import stats
-from sklearn.model_selection import train_test_split as sk_split
 from sklearn.model_selection import train_test_split
-import wandb  # logowanie eksperymentów do Weights & Biases
+
+import wandb
 
 # Ustawienie loggera
 log = logging.getLogger(__name__)
 
 # --- Konfiguracja W&B ---
-WANDB_PROJECT = os.getenv("WANDB_PROJECT", "asi-ml-satisfaction")  # nazwa projektu w W&B
-WANDB_ENTITY = os.getenv("WANDB_ENTITY", None)  # opcjonalnie nazwa teamu / organizacji
-wandb_run = None  # globalny uchwyt na aktualny run W&B
+WANDB_PROJECT = os.getenv("WANDB_PROJECT", "asi-ml-satisfaction")
+WANDB_ENTITY = os.getenv("WANDB_ENTITY", None)
+wandb_run = None
 
 
 # ==============================================================================
 # 1. FUNKCJE PRZETWARZANIA DANYCH
-# (Niezbędne do przygotowania X_train, y_train dla AutoGluon)
 # ==============================================================================
+
 
 def load_raw(data_path: str) -> pd.DataFrame:
     """Load raw CSV and strip column names."""
@@ -43,7 +42,7 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
         "Customer Type": {"Loyal Customer": 1, "disloyal Customer": 0},
         "Type of Travel": {"Business travel": 1, "Personal Travel": 0},
         "Class": {"Business": 2, "Eco Plus": 1, "Eco": 0},
-        "satisfaction": {"satisfied": 1, "neutral or dissatisfied": 0}
+        "satisfaction": {"satisfied": 1, "neutral or dissatisfied": 0},
     }
 
     for col, mapping in mappings.items():
@@ -51,10 +50,20 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = df[col].map(mapping)
 
     rating_columns = [
-        "Inflight wifi service", "Departure/Arrival time convenient", "Ease of Online booking",
-        "Gate location", "Food and drink", "Online boarding", "Seat comfort",
-        "Inflight entertainment", "On-board service", "Leg room service",
-        "Baggage handling", "Checkin service", "Inflight service", "Cleanliness",
+        "Inflight wifi service",
+        "Departure/Arrival time convenient",
+        "Ease of Online booking",
+        "Gate location",
+        "Food and drink",
+        "Online boarding",
+        "Seat comfort",
+        "Inflight entertainment",
+        "On-board service",
+        "Leg room service",
+        "Baggage handling",
+        "Checkin service",
+        "Inflight service",
+        "Cleanliness",
     ]
     for col in rating_columns:
         if col in df.columns:
@@ -65,7 +74,12 @@ def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
         if col in df.columns:
             df[col] = df[col].fillna(0)
 
-    numeric_cols = ["Age", "Flight Distance", "Departure Delay in Minutes", "Arrival Delay in Minutes"]
+    numeric_cols = [
+        "Age",
+        "Flight Distance",
+        "Departure Delay in Minutes",
+        "Arrival Delay in Minutes",
+    ]
     numeric_cols = [col for col in numeric_cols if col in df.columns]
     if numeric_cols:
         z_scores = np.abs(stats.zscore(df[numeric_cols]))
@@ -91,10 +105,7 @@ def split_data(df: pd.DataFrame, target_col: str, run_params: dict):
     stratify = y if stratify_flag else None
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=stratify
+        X, y, test_size=test_size, random_state=random_state, stratify=stratify
     )
 
     y_train = y_train.to_frame() if isinstance(y_train, pd.Series) else y_train
@@ -106,16 +117,16 @@ def split_data(df: pd.DataFrame, target_col: str, run_params: dict):
 # ==============================================================================
 # 2. FUNKCJE AUTOGLUON + W&B
 # ==============================================================================
+MIN_TRAIN_ROWS = 2
+
 
 def train_autogluon(X_train, y_train, params):
     """
     Trenuje model AutoGluon TabularPredictor.
     Każdy `kedro run` = jeden eksperyment zalogowany w W&B.
     """
-    from autogluon.tabular import TabularPredictor
-    import numpy as np
 
-    global wandb_run  # korzystamy z globalnego runu W&B
+    global wandb_run
 
     label_col = params["label"]
 
@@ -125,7 +136,7 @@ def train_autogluon(X_train, y_train, params):
     mask = train_data[label_col].notna() & np.isfinite(train_data[label_col])
     train_data = train_data.loc[mask].reset_index(drop=True)
 
-    if train_data.shape[0] < 2:
+    if train_data.shape[0] < MIN_TRAIN_ROWS:
         raise ValueError(
             f"Za mało wierszy do trenowania po oczyszczeniu danych: {train_data.shape[0]}. "
             "Sprawdź dane źródłowe i kolumnę etykiet."
@@ -154,7 +165,9 @@ def train_autogluon(X_train, y_train, params):
     }
 
     try:
-        log.info(f"Uruchamianie eksperymentu W&B: project={WANDB_PROJECT}, entity={WANDB_ENTITY}")
+        log.info(
+            f"Uruchamianie eksperymentu W&B: project={WANDB_PROJECT}, entity={WANDB_ENTITY}"
+        )
         wandb_run = wandb.init(
             project=WANDB_PROJECT,
             entity=WANDB_ENTITY,
@@ -162,7 +175,9 @@ def train_autogluon(X_train, y_train, params):
             config=wandb_config,
         )
     except Exception as e:
-        log.warning(f"Nie udało się zainicjalizować W&B (działam dalej bez logowania): {e}")
+        log.warning(
+            f"Nie udało się zainicjalizować W&B (działam dalej bez logowania): {e}"
+        )
         wandb_run = None
 
     # --- Trening AutoGluon + logowanie czasu treningu do W&B ---
@@ -172,7 +187,7 @@ def train_autogluon(X_train, y_train, params):
         problem_type=problem_type,
         eval_metric=eval_metric,
         path=save_path,
-        verbosity=2
+        verbosity=2,
     ).fit(
         train_data=train_data,
         time_limit=time_limit,
@@ -190,7 +205,9 @@ def train_autogluon(X_train, y_train, params):
     return predictor
 
 
-def evaluate_autogluon(ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str, Any]:
+def evaluate_autogluon(
+    ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_test: pd.Series
+) -> dict[str, any]:
     """
     Ocenia wytrenowany predyktor AutoGluon na zbiorze testowym i zwraca metryki do MetricsDataSet.
     Dodatkowo loguje metryki i feature importance do W&B.
@@ -205,9 +222,11 @@ def evaluate_autogluon(ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_t
     ag_metrics_raw = ag_predictor.evaluate(temp_test_data, silent=True)
 
     metrics = {
-        f"ag_test_score_{ag_predictor.eval_metric}": ag_metrics_raw.get(ag_predictor.eval_metric, 0.0),
+        f"ag_test_score_{ag_predictor.eval_metric}": ag_metrics_raw.get(
+            ag_predictor.eval_metric, 0.0
+        ),
         "ag_test_error_rate": ag_metrics_raw.get("error_rate", 0.0),
-        "ag_roc_auc": ag_metrics_raw.get("roc_auc", None)
+        "ag_roc_auc": ag_metrics_raw.get("roc_auc", None),
     }
 
     log.info(f"Metryki AutoGluon na zbiorze testowym: {metrics}")
@@ -223,15 +242,18 @@ def evaluate_autogluon(ag_predictor: TabularPredictor, X_test: pd.DataFrame, y_t
     # --- Feature importance + logowanie top 5 do W&B ---
     try:
         feature_importance_df = ag_predictor.feature_importance(
-            temp_test_data,
-            subsample_size=50000
+            temp_test_data, subsample_size=50000
         )
         log.info("\nTop 5 Feature Importance:")
         log.info("\n" + feature_importance_df.head(5).to_markdown())
 
         if wandb_run is not None:
             wandb_run.log(
-                {"feature_importance_top5": wandb.Table(dataframe=feature_importance_df.head(5))}
+                {
+                    "feature_importance_top5": wandb.Table(
+                        dataframe=feature_importance_df.head(5)
+                    )
+                }
             )
 
     except Exception as e:
@@ -249,14 +271,16 @@ def save_best_model(ag_predictor: TabularPredictor) -> TabularPredictor:
     """
     global wandb_run
 
-    log.info(f"Zapisywanie obiektu TabularPredictor jako 'ag_model'.")
+    log.info("Zapisywanie obiektu TabularPredictor jako 'ag_model'.")
 
     # --- Ręczny zapis modelu do pliku, który potem stanie się artefaktem W&B ---
     model_path = Path("data/06_models/ag_production.pkl")
     model_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # ruff: noqa: PLC0415
     try:
         import joblib
+
         joblib.dump(ag_predictor, model_path)
         log.info(f"Zapisano model AutoGluon do pliku: {model_path}")
     except Exception as e:
