@@ -6,6 +6,7 @@ from .nodes import (
     # Nody do przetwarzania danych
     load_raw,
     save_best_model,
+    save_prediction_to_db,
     split_data,
     # Nody AutoGluon (Zadanie 2)
     train_autogluon,
@@ -60,6 +61,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["ag_predictor"],
                 outputs="ag_model",  # Zapis do catalog.yml
                 name="save_best_model_node",
+            ),
+            node(
+                func=save_prediction_to_db,
+                inputs=["ag_metrics", "X_test", "ag_predictor", "params:autogluon"],
+                outputs="db_save_result",
+                name="save_prediction_to_db_node",
             ),
         ]
     )
