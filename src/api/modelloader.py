@@ -7,7 +7,9 @@ from typing import Tuple
 from autogluon.tabular import TabularPredictor
 
 # Ścieżka do katalogu z modelem AutoGluon
-DEFAULT_MODEL_DIR = "tmp_kedro/satisfaction-prediction/data/06_models/autogluon_temp_output"
+DEFAULT_MODEL_DIR = (
+    "tmp_kedro/satisfaction-prediction/data/06_models/autogluon_temp_output"
+)
 
 # Wersja modelu
 DEFAULT_MODEL_VERSION = "ag_model:v2"

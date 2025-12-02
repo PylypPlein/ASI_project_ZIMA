@@ -10,6 +10,7 @@ from scipy import stats
 from sklearn.model_selection import train_test_split
 
 import wandb
+from satisfaction_prediction.pipelines.utils.database import save_prediction
 
 # Ustawienie loggera
 log = logging.getLogger(__name__)
@@ -303,3 +304,46 @@ def save_best_model(ag_predictor: TabularPredictor) -> TabularPredictor:
 
     # Kedro dalej zapisze ten sam obiekt do ag_model (PickleDataSet)
     return ag_predictor
+
+
+def save_prediction_to_db(
+    ag_metrics: dict,
+    X_test: pd.DataFrame,
+    ag_predictor: TabularPredictor,
+    autogluon_params: dict,
+) -> dict:
+
+    if ag_metrics is None:
+        ag_metrics = {}
+
+    payload = {
+        "n_test_samples": len(X_test),
+        "n_features": len(X_test.columns),
+        "model_type": "autogluon",
+        "problem_type": autogluon_params.get("problem_type", "unknown"),
+    }
+
+    main_metric_key = f"ag_test_score_{ag_predictor.eval_metric}"
+    prediction_value = ag_metrics.get(main_metric_key, 0.0)
+
+    model_version = autogluon_params.get("label", "ag_model:v1")
+
+    try:
+        record_id = save_prediction(
+            payload=payload,
+            prediction=prediction_value,
+            model_version=model_version,
+        )
+        log.info(f"Metryki zapisane do bazy z ID: {record_id}")
+        return {
+            "status": "success",
+            "record_id": record_id,
+            "model_version": model_version,
+            "main_metric": prediction_value,
+        }
+    except Exception as e:
+        log.error(f"Nie udało się zapisać do bazy: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+        }
