@@ -9,7 +9,7 @@ run_params:
   random_state: 10
 
 autogluon:
-  time_limit: 480
+  time_limit: 60
   presets: "best_quality"
   problem_type: "binary"
   label: "target"
