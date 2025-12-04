@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from src.api.config import settings
+from src.api.db import save_prediction
+import joblib, os
+import pandas as pd
+
 app = FastAPI()
 
+model = joblib.load(settings.MODEL_PATH)
+model_version = os.path.basename(settings.MODEL_PATH)
 
 class Features(BaseModel):
     id: int
@@ -28,17 +35,24 @@ class Features(BaseModel):
     Departure_Delay_in_Minutes: int
     Arrival_Delay_in_Minutes: float | int
 
-
 class Prediction(BaseModel):
     prediction: float | int
     model_version: str
-
 
 @app.get("/healthz")
 def healthz():
     return {"status": "ok"}
 
-
 @app.post("/predict", response_model=Prediction)
 def predict(payload: Features):
-    return {"prediction": 0.0, "model_version": "local-dev"}
+
+    # Convert Pydantic model to DataFrame (AutoGluon needs column names)
+    df = pd.DataFrame([payload.dict()])
+
+    # Predict using AutoGluon model
+    pred = float(model.predict(df)[0])
+
+    # Save record to DB
+    save_prediction(payload.dict(), pred, model_version)
+
+    return {"prediction": pred, "model_version": model_version}
