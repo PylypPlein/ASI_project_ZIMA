@@ -1,11 +1,11 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from src.api.db import engine
 from src.api.main import app
-from sqlalchemy import text
-
 
 client = TestClient(app)
+
 
 def test_validation_error():
     payload = {
@@ -15,14 +15,12 @@ def test_validation_error():
         "Age": 30,
         "Type_of_Travel": "Business travel",
         "Class": "Business",
-        "Flight_Distance": "oops"
+        "Flight_Distance": "oops",
     }
 
     r = client.post("/predict", json=payload)
 
-    assert r.status_code == 422
-
-
+    assert r.status_code == 422  # noqa: PLR2004
 
 
 def test_predict_integration_db():
@@ -49,7 +47,7 @@ def test_predict_integration_db():
         "Inflight_service": 5,
         "Cleanliness": 5,
         "Departure_Delay_in_Minutes": 0,
-        "Arrival_Delay_in_Minutes": 0.0
+        "Arrival_Delay_in_Minutes": 0.0,
     }
 
     initial_count = 0
@@ -62,7 +60,7 @@ def test_predict_integration_db():
 
     r = client.post("/predict", json=valid_payload)
 
-    assert r.status_code == 200
+    assert r.status_code == 200  # noqa: PLR2004
     assert "prediction" in r.json()
 
     with engine.connect() as conn:
