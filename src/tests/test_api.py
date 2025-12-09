@@ -4,11 +4,13 @@ from sqlalchemy import text
 from src.api.db import engine
 from src.api.main import app
 
+
 client = TestClient(app)
 
 
 def test_validation_error():
     payload = {
+        "lp": 1,
         "id": 1,
         "Gender": "Male",
         "Customer_Type": "Loyal Customer",
@@ -25,29 +27,30 @@ def test_validation_error():
 
 def test_predict_integration_db():
     valid_payload = {
+        "lp": 1001,
         "id": 1001,
         "Gender": "Male",
-        "Customer_Type": "Loyal Customer",
+        "Customer Type": "Loyal Customer",
         "Age": 30,
-        "Type_of_Travel": "Business travel",
+        "Type of Travel": "Business travel",
         "Class": "Business",
-        "Flight_Distance": 200,
-        "Inflight_wifi_service": 5,
-        "Departure_Arrival_time_convenient": 5,
-        "Ease_of_Online_booking": 5,
-        "Gate_location": 5,
-        "Food_and_drink": 5,
-        "Online_boarding": 5,
-        "Seat_comfort": 5,
-        "Inflight_entertainment": 5,
-        "On_board_service": 5,
-        "Leg_room_service": 5,
-        "Baggage_handling": 5,
-        "Checkin_service": 5,
-        "Inflight_service": 5,
+        "Flight Distance": 200,
+        "Inflight wifi service": 5,
+        "Departure/Arrival time convenient": 5,
+        "Ease of Online booking": 5,
+        "Gate location": 5,
+        "Food and drink": 5,
+        "Online boarding": 5,
+        "Seat comfort": 5,
+        "Inflight entertainment": 5,
+        "On-board service": 5,
+        "Leg room service": 5,
+        "Baggage handling": 5,
+        "Checkin service": 5,
+        "Inflight service": 5,
         "Cleanliness": 5,
-        "Departure_Delay_in_Minutes": 0,
-        "Arrival_Delay_in_Minutes": 0.0,
+        "Departure Delay in Minutes": 0,
+        "Arrival Delay in Minutes": 0.0,
     }
 
     initial_count = 0
