@@ -167,3 +167,42 @@ feature statistics calculated across all runs:
 | 0.028443722064201715 | 0.009202252618970624 | 0.0011495009520586345 | 5 | 0.04739128739530987 | 0.009496156733093557 |
 | 0.010341324664770557 | 0.0011524382609420466 | 0.000018204969860999455 | 5 | 0.01271421097243972 | 0.007968438357101393 |
 | 0.004835432750914382 | 0.0035143028541957683 | 0.01852570632669658 | 5 | 0.01207143090053079 | -0.0024005653987020275 |
+
+# run
+uvicorn src.api.main:app --reload --port 8000
+ 
+# test health
+curl http://127.0.0.1:8000/healthz
+ 
+# prediction
+curl -X POST "http://127.0.0.1:8007/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+   "lp": 1001,
+   "id": 1001,
+   "Gender": "Male",
+   "Customer Type": "Loyal Customer",
+   "Age": 30,
+   "Type of Travel": "Business travel",
+   "Class": "Business",
+   "Flight Distance": 200,
+   "Inflight wifi service": 5,
+   "Departure/Arrival time convenient": 5,
+   "Ease of Online booking": 5,
+   "Gate location": 5,
+   "Food and drink": 5,
+   "Online boarding": 5,
+   "Seat comfort": 5,
+   "Inflight entertainment": 5,
+   "On-board service": 5,
+   "Leg room service": 5,
+   "Baggage handling": 5,
+   "Checkin service": 5,
+   "Inflight service": 5,
+   "Cleanliness": 5,
+   "Departure Delay in Minutes": 0,
+   "Arrival Delay in Minutes": 0.0
+  }'
+
+# database
+sqlite3 local.db 'select * from predictions limit 5;'
