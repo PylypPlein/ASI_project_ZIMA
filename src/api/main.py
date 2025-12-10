@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from src.api.config import settings
-from src.api.db import save_prediction
+from satisfaction_prediction.pipelines.utils.database import save_prediction
 import joblib
 import os
 import pandas as pd
