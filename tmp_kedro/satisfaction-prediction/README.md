@@ -170,12 +170,12 @@ feature statistics calculated across all runs:
 
 # run
 uvicorn src.api.main:app --reload --port 8000
- 
+
 # test health
 curl http://127.0.0.1:8000/healthz
- 
+
 # prediction
-curl -X POST "http://127.0.0.1:8007/predict" \
+curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
    "lp": 1001,

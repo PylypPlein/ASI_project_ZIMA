@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///data/predictions.db"
     WANDB_API_KEY: str | None = None
 
-    class Config:
+    class ConfigDict:
         env_file = ".env"
 
 

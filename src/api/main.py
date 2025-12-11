@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from src.api.config import settings
-from satisfaction_prediction.pipelines.utils.database import save_prediction
+from src.api.database import save_prediction
 import joblib
 import os
 import pandas as pd
@@ -40,7 +40,7 @@ class Features(BaseModel):
     Departure_Delay_in_Minutes: int = Field(alias="Departure Delay in Minutes")
     Arrival_Delay_in_Minutes: float = Field(alias="Arrival Delay in Minutes")
 
-    class Config:
+    class ConfigDict:
         allow_population_by_field_name = True
 
 
@@ -78,7 +78,7 @@ COLUMN_MAP = {
 
 @app.post("/predict", response_model=Prediction)
 def predict(payload: Features):
-    df = pd.DataFrame([payload.dict(by_alias=True)])
+    df = pd.DataFrame([payload.model_dump(by_alias=True)])
 
     df = df.rename(columns=COLUMN_MAP)
 
@@ -108,6 +108,6 @@ def predict(payload: Features):
 
     pred = model.predict(df)[0]
 
-    save_prediction(payload.dict(), pred, model_version)
+    save_prediction(payload.model_dump(), pred, model_version)
 
     return {"prediction": float(pred), "model_version": model_version}

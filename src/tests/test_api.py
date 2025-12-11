@@ -1,9 +1,8 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from satisfaction_prediction.pipelines.utils.database import engine
 from src.api.main import app
-
+from src.api.database import engine
 
 client = TestClient(app)
 
