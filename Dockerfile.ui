@@ -1,0 +1,11 @@
+FROM python:3.11-slim
+WORKDIR /app
+
+RUN pip install --no-cache-dir streamlit requests
+
+EXPOSE 8501
+
+# Minimalna aplikacja UI
+RUN python -c "from pathlib import Path; Path('src/ui').mkdir(parents=True, exist_ok=True); Path('src/ui/app.py').write_text('import streamlit as st\\nst.title(\"ML Demo\")\\nst.write(\"UI container is up\")\\n')"
+
+CMD ["streamlit","run","src/ui/app.py","--server.address","0.0.0.0","--server.port","8501"]
