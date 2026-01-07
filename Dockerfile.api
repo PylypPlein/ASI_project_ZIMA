@@ -1,0 +1,11 @@
+FROM python:3.11-slim
+WORKDIR /app
+
+RUN pip install --no-cache-dir fastapi uvicorn
+
+EXPOSE 8000
+
+
+RUN python -c "from pathlib import Path; Path('src/api').mkdir(parents=True, exist_ok=True); Path('src/api/main.py').write_text('from fastapi import FastAPI\\napp=FastAPI()\\n@app.get(\"/healthz\")\\ndef healthz():\\n    return {\"status\":\"ok\"}\\n')"
+
+CMD ["uvicorn","src.api.main:app","--host","0.0.0.0","--port","8000"]
