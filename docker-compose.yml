@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile.api
     environment:
       DATABASE_URL: postgresql://app:app@db:5432/appdb
-      MODEL_PATH: /app/data/06_models/ag_production.pkl
+      MODEL_PATH: /app/tmp_kedro/satisfaction-prediction/data/06_models/autogluon_temp_output
     depends_on:
       db:
         condition: service_healthy

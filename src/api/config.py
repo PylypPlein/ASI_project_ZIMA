@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     MODEL_PATH: str = (
-        "tmp_kedro/satisfaction-prediction/data/06_models/ag_production.pkl"
+        "/app/tmp_kedro/satisfaction-prediction/data/06_models/autogluon_temp_output"
     )
     DATABASE_URL: str = "sqlite:///data/predictions.db"
     WANDB_API_KEY: str | None = None

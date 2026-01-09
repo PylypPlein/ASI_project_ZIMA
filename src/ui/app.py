@@ -1,4 +1,6 @@
-import requests, os, streamlit as st
+import requests
+import os
+import streamlit as st
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 st.title("ASI ML project")
@@ -39,7 +41,20 @@ if st.button("Predict"):
         "Arrival Delay in Minutes": 0.0,
     }
 
-    r = requests.post(f"{API_URL}/predict", json=payload, timeout=10)
+    try:
+        r = requests.post(f"{API_URL}/predict", json=payload, timeout=10)
 
-    st.write("Status:", r.status_code)
-    st.json(r.json())
+        st.write("Status:", r.status_code)
+
+        if r.status_code == 200:
+            try:
+                st.json(r.json())
+            except (ValueError, requests.exceptions.JSONDecodeError):
+                st.error("Odpowiedź nie jest JSON-em:")
+                st.code(r.text)
+        else:
+            st.error(f"Błąd HTTP {r.status_code}")
+            st.code(r.text)
+
+    except Exception as e:
+        st.error(f"Błąd połączenia: {e}")
