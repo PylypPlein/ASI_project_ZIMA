@@ -1,15 +1,15 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-from src.api.config import settings
 from src.api.database import save_prediction
 import joblib
-import os
 import pandas as pd
 
 app = FastAPI()
 
-model = joblib.load(settings.MODEL_PATH)
-model_version = os.path.basename(settings.MODEL_PATH)
+model = joblib.load(
+    "/app/tmp_kedro/satisfaction-prediction/data/06_models/ag_production.pkl"
+)
+model_version = "ag_production"
 
 
 class Features(BaseModel):
@@ -79,7 +79,6 @@ COLUMN_MAP = {
 @app.post("/predict", response_model=Prediction)
 def predict(payload: Features):
     df = pd.DataFrame([payload.model_dump(by_alias=True)])
-
     df = df.rename(columns=COLUMN_MAP)
 
     class_mapping = {"Business": 2, "Eco Plus": 1, "Eco": 0}

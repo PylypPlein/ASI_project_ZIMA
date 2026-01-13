@@ -1,11 +1,38 @@
 FROM python:3.11-slim
+
 WORKDIR /app
 
-RUN pip install --no-cache-dir fastapi uvicorn
+COPY src ./src
+COPY tmp_kedro/satisfaction-prediction/data/06_models ./tmp_kedro/satisfaction-prediction/data/06_models
+
+RUN mkdir -p /Users/wiktorkaczor/Desktop/PJATK/ASI/ASI_project_ZIMA && \
+    ln -s /app/tmp_kedro /Users/wiktorkaczor/Desktop/PJATK/ASI/ASI_project_ZIMA/tmp_kedro
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    uvicorn \
+    fastapi \
+    pydantic \
+    pydantic-settings \
+    sqlalchemy \
+    psycopg2-binary \
+    scikit-learn \
+    pandas \
+    numpy \
+    joblib \
+    "autogluon.tabular==1.4.0" \
+    catboost \
+    lightgbm \
+    xgboost \
+    torch
+
+ENV PYTHONPATH=/app/src:$PYTHONPATH
 
 EXPOSE 8000
 
-
-RUN python -c "from pathlib import Path; Path('src/api').mkdir(parents=True, exist_ok=True); Path('src/api/main.py').write_text('from fastapi import FastAPI\\napp=FastAPI()\\n@app.get(\"/healthz\")\\ndef healthz():\\n    return {\"status\":\"ok\"}\\n')"
-
-CMD ["uvicorn","src.api.main:app","--host","0.0.0.0","--port","8000"]
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
