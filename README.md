@@ -15,8 +15,7 @@ The goal is to build a machine learning model that predicts whether a passenger 
 [Airline Passenger Satisfaction Dataset — Kaggle](https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction)
 
 **License:**
-The dataset “Airline Passenger Satisfaction” by TJ Klein is available on Kaggle
- under the license type “Other (specified in description)”.
+The dataset “Airline Passenger Satisfaction” by TJ Klein is available on Kaggle under the license type “Other (specified in description)”.
 Since the author did not specify a standard open license, the dataset is used in this project for educational and non-commercial purposes only, in accordance with Kaggle’s Terms of Service (featuring CC0: Public Domain specification).
 Users should credit the dataset’s author when sharing or reproducing related work.
 If the dataset author later defines an explicit license, those terms shall take precedence.
@@ -163,8 +162,7 @@ To automatically strip out all output cell contents before committing to `git`, 
 
 During Sprint 2, experiment tracking was implemented using **Weights & Biases (W&B)**.
 
-Each time the Kedro pipeline is executed (`kedro run`), model training and evaluation
-results are automatically logged to W&B. Logged information includes:
+Each time the Kedro pipeline is executed (`kedro run`), model training and evaluation results are automatically logged to W&B. Logged information includes:
 - Model parameters (from the `params` configuration)
 - Evaluation metrics (e.g., F1-score)
 
@@ -184,8 +182,7 @@ Run the Kedro pipeline:
 
 
 kedro run
-After running the pipeline, all metrics and configuration details will appear
-in the W&B project dashboard
+After running the pipeline, all metrics and configuration details will appear in the W&B project dashboard
 
 ### Production model selection
 
@@ -273,8 +270,7 @@ sqlite3 local.db 'select * from predictions limit 5;'
 
 ## API & Application Deployment 
 
-During Sprint 5, the project was extended with a production-ready machine learning API
-and a simple user interface, enabling end-to-end interaction with the trained model.
+During Sprint 5, the project was extended with a production-ready machine learning API and a simple user interface, enabling end-to-end interaction with the trained model.
 
 ### Backend API (FastAPI)
 
@@ -284,9 +280,8 @@ The API exposes the following endpoints:
 - `GET /healthz` – health check endpoint
 - `POST /predict` – generates a satisfaction prediction based on input features
 
-Input data is validated using **Pydantic** schemas.
-Before inference, the input payload is transformed into a pandas DataFrame,
-aligned with the model’s expected feature schema, and preprocessed accordingly.
+Input data is validated using **Pydantic** schemas. 
+Before inference, the input payload is transformed into a pandas DataFrame, aligned with the model’s expected feature schema, and preprocessed accordingly.
 
 Each prediction request is stored in a database together with:
 - input features,
@@ -301,8 +296,7 @@ The UI allows users to:
 - send prediction requests to the backend API,
 - view prediction results directly in the browser.
 
-The frontend communicates with the API via HTTP requests and handles
-connection errors and invalid responses gracefully.
+The frontend communicates with the API via HTTP requests and handles connection errors and invalid responses gracefully.
 
 ### Containerization & Services Integration
 
@@ -313,9 +307,7 @@ The application is fully containerized using **Docker** and orchestrated with
 - `ui` – Streamlit-based frontend
 - `db` – PostgreSQL database for storing predictions
 
-All services run within a shared Docker network, enabling seamless communication
-without manual configuration. Environment variables are used to configure
-model paths, database connections, and API endpoints.
+All services run within a shared Docker network, enabling seamless communication without manual configuration. Environment variables are used to configure model paths, database connections, and API endpoints.
 
 ### To run the full system locally:
 
@@ -332,3 +324,18 @@ curl http://localhost:8000/healthz
 open http://localhost:8501
 ## DB (psql):
 docker exec -it <container_db> psql -U app -d appdb -c "select * from predictions limit 5;"
+
+### Database credentials (educational setup)
+
+For simplicity and educational purposes, the database uses default
+PostgreSQL credentials defined directly in the `docker-compose.yml` file:
+
+```yaml
+environment:
+  POSTGRES_USER: app
+  POSTGRES_PASSWORD: app
+  POSTGRES_DB: appdb
+```
+In real-world applications, such credentials should be replaced with secure, project-specific values stored outside the source code.
+
+An example `.env.example` file is provided to illustrate how these values can be externalized in a production setup.
