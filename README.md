@@ -228,13 +228,15 @@ feature statistics calculated across all runs:
 | 0.010341324664770557 | 0.0011524382609420466 | 0.000018204969860999455 | 5 | 0.01271421097243972 | 0.007968438357101393 |
 | 0.004835432750914382 | 0.0035143028541957683 | 0.01852570632669658 | 5 | 0.01207143090053079 | -0.0024005653987020275 |
 
-# run
+## Local development (without Docker)
+
+## run
 uvicorn src.api.main:app --reload --port 8000
 
-# test health
+## test health
 curl http://127.0.0.1:8000/healthz
 
-# prediction
+## prediction
 curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
@@ -266,3 +268,67 @@ curl -X POST "http://127.0.0.1:8000/predict" \
 
 # database
 sqlite3 local.db 'select * from predictions limit 5;'
+
+---
+
+## API & Application Deployment 
+
+During Sprint 5, the project was extended with a production-ready machine learning API
+and a simple user interface, enabling end-to-end interaction with the trained model.
+
+### Backend API (FastAPI)
+
+A REST API was implemented using **FastAPI** to serve the trained AutoGluon model.
+The API exposes the following endpoints:
+
+- `GET /healthz` – health check endpoint
+- `POST /predict` – generates a satisfaction prediction based on input features
+
+Input data is validated using **Pydantic** schemas.
+Before inference, the input payload is transformed into a pandas DataFrame,
+aligned with the model’s expected feature schema, and preprocessed accordingly.
+
+Each prediction request is stored in a database together with:
+- input features,
+- predicted value,
+- model version.
+
+### Frontend UI (Streamlit)
+
+A lightweight frontend was created using **Streamlit**.
+The UI allows users to:
+- provide example passenger data,
+- send prediction requests to the backend API,
+- view prediction results directly in the browser.
+
+The frontend communicates with the API via HTTP requests and handles
+connection errors and invalid responses gracefully.
+
+### Containerization & Services Integration
+
+The application is fully containerized using **Docker** and orchestrated with
+**Docker Compose**, consisting of the following services:
+
+- `api` – FastAPI backend with the ML model
+- `ui` – Streamlit-based frontend
+- `db` – PostgreSQL database for storing predictions
+
+All services run within a shared Docker network, enabling seamless communication
+without manual configuration. Environment variables are used to configure
+model paths, database connections, and API endpoints.
+
+### To run the full system locally:
+
+The recommended way to run the full system (API, UI, and database) is via Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+## API:
+curl http://localhost:8000/healthz
+
+## UI:
+open http://localhost:8501
+## DB (psql):
+docker exec -it <container_db> psql -U app -d appdb -c "select * from predictions limit 5;"
