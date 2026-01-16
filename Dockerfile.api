@@ -29,7 +29,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
     catboost \
     lightgbm \
     xgboost \
-    torch
+    torch\
+    fastai\
+    IPython
 
 ENV PYTHONPATH=/app/src:$PYTHONPATH
 
