@@ -3,11 +3,12 @@ from pydantic import BaseModel, Field
 from src.api.database import save_prediction
 import joblib
 import pandas as pd
+from src.api.model import predictor
 
 app = FastAPI()
 
 model = joblib.load(
-    "/app/satisfaction-prediction/data/06_models/ag_production.pkl"
+    "/app/data/06_models/ag_production.pkl"
 )
 model_version = "ag_production"
 
@@ -105,7 +106,7 @@ def predict(payload: Features):
 
     df = df[model.feature_metadata_in.get_features()]
 
-    pred = model.predict(df)[0]
+    pred = predictor.predict(df).iloc[0]
 
     save_prediction(payload.model_dump(), pred, model_version)
 

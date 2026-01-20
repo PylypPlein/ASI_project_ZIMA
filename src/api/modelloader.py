@@ -8,7 +8,7 @@ from autogluon.tabular import TabularPredictor
 
 # Ścieżka do katalogu z modelem AutoGluon
 DEFAULT_MODEL_DIR = (
-    "tmp_kedro/satisfaction-prediction/data/06_models/autogluon_temp_output"
+    "tmp_kedro/data/06_models/autogluon_temp_output"
 )
 
 # Wersja modelu
