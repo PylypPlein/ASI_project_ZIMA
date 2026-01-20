@@ -7,7 +7,7 @@ import pandas as pd
 app = FastAPI()
 
 model = joblib.load(
-    "/app/tmp_kedro/satisfaction-prediction/data/06_models/ag_production.pkl"
+    "/app/satisfaction-prediction/data/06_models/ag_production.pkl"
 )
 model_version = "ag_production"
 
