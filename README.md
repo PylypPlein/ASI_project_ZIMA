@@ -51,13 +51,15 @@ It helps assess how well the classifier identifies both satisfied and dissatisfi
 
 ## Project Structure
 
-## Kedro quickstart
-Kedro project path = ASI_project_ZIMA\tmp_kedro\satisfaction-prediction
-kedro run
-# lub
-kedro run --pipeline second_sprint_pipeline
+The project follows a standard Kedro repository layout.
 
-# satisfaction-prediction
+## Kedro quickstart
+
+```bash
+kedro run
+# or
+kedro run --pipeline second_sprint_pipeline
+```
 
 [![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
 
@@ -173,9 +175,9 @@ Each time the Kedro pipeline is executed (`kedro run`), model training and evalu
    pip install wandb
 Log in to your W&B account:
 
-
-
+```bash
 wandb login
+```
 You can find your API key here: https://wandb.ai
 
 Run the Kedro pipeline:
@@ -264,7 +266,7 @@ curl -X POST "http://127.0.0.1:8000/predict" \
   }'
 
 # database
-sqlite3 local.db 'select * from predictions limit 5;'
+sqlite3 data/predictions.db 'select * from predictions limit 5;'
 
 ---
 
@@ -305,7 +307,6 @@ The application is fully containerized using **Docker** and orchestrated with
 
 - `api` – FastAPI backend with the ML model
 - `ui` – Streamlit-based frontend
-- `db` – PostgreSQL database for storing predictions
 
 All services run within a shared Docker network, enabling seamless communication without manual configuration. Environment variables are used to configure model paths, database connections, and API endpoints.
 
@@ -322,13 +323,9 @@ curl http://localhost:8000/healthz
 
 ## UI:
 open http://localhost:8501
-## DB (psql):
-docker exec -it <container_db> psql -U app -d appdb -c "select * from predictions limit 5;"
 
-### Database credentials (educational setup)
-
-For simplicity and educational purposes, the database uses default
-PostgreSQL credentials defined directly in the `docker-compose.yml` file:
+Predictions are stored using a lightweight SQLite database.
+The database file is created automatically on first run.
 
 ```yaml
 environment:
@@ -338,4 +335,5 @@ environment:
 ```
 In real-world applications, such credentials should be replaced with secure, project-specific values stored outside the source code.
 
-An example `.env.example` file is provided to illustrate how these values can be externalized in a production setup.
+An example `.env.example` file is provided for documentation purposes only.
+No secrets are committed to the repository.
