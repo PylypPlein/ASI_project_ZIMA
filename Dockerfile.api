@@ -1,39 +1,37 @@
-FROM python:3.11-slim
+FROM python:3.11.13-slim
 
 WORKDIR /app
 
 COPY src ./src
-COPY tmp_kedro/satisfaction-prediction/data/06_models ./tmp_kedro/satisfaction-prediction/data/06_models
-
-RUN mkdir -p /Users/wiktorkaczor/Desktop/PJATK/ASI/ASI_project_ZIMA && \
-    ln -s /app/tmp_kedro /Users/wiktorkaczor/Desktop/PJATK/ASI/ASI_project_ZIMA/tmp_kedro
+COPY data/06_models ./data/06_models
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+        gcc \
+        libpq-dev \
+&& rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir \
-    uvicorn \
-    fastapi \
-    pydantic \
-    pydantic-settings \
-    sqlalchemy \
-    psycopg2-binary \
-    scikit-learn \
-    pandas \
-    numpy \
-    joblib \
-    "autogluon.tabular==1.4.0" \
-    catboost \
-    lightgbm \
-    xgboost \
-    torch\
-    fastai\
-    IPython
+        "autogluon==1.4.0" \
+        fastai \
+        catboost \
+        lightgbm \
+        xgboost \
+        uvicorn \
+        fastapi \
+        pydantic \
+        pydantic-settings \
+        sqlalchemy \
+        psycopg2-binary \
+        scikit-learn \
+        numpy\
+        pandas \
+        joblib \
+        IPython
 
-ENV PYTHONPATH=/app/src:$PYTHONPATH
+ENV PYTHONPATH=/app/src
+ENV MODEL_PATH=/app/data/06_models/autogluon_temp_output
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 

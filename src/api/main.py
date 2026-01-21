@@ -3,11 +3,27 @@ from pydantic import BaseModel, Field
 from src.api.database import save_prediction
 import joblib
 import pandas as pd
+from src.api.model import predictor
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+origins = [
+    "https://ui-xxxxx.run.app",  # URL Twojego UI w Cloud Run
+    "http://localhost:8501"      # jeśli testujesz lokalne UI
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET","POST"],
+    allow_headers=["*"],
+)
+
 model = joblib.load(
-    "/app/tmp_kedro/satisfaction-prediction/data/06_models/ag_production.pkl"
+    "/app/data/06_models/ag_production.pkl"
 )
 model_version = "ag_production"
 
@@ -105,7 +121,7 @@ def predict(payload: Features):
 
     df = df[model.feature_metadata_in.get_features()]
 
-    pred = model.predict(df)[0]
+    pred = predictor.predict(df).iloc[0]
 
     save_prediction(payload.model_dump(), pred, model_version)
 

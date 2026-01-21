@@ -1,0 +1,23 @@
+data_path: "data/01_raw/sample_raw.csv"
+target_col: "satisfaction"
+
+run_params:
+  split:
+    test_size: 0.2
+    random_state: 42
+    stratify: false
+  random_state: 10
+
+autogluon:
+  time_limit: 60
+  presets: "best_quality"
+  problem_type: "binary"
+  label: "target"
+  eval_metric: "roc_auc"
+
+model:
+  kind: "logreg"
+  max_iter: 1000
+
+database:
+  url: "sqlite:///data/predictions.db"
