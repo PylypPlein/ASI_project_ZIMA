@@ -3,7 +3,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: app
-      POSTGRES_PASSWORD: 2QuXC09uLq61ejxf
+      POSTGRES_PASSWORD: app
       POSTGRES_DB: appdb
     ports:
       - "5432:5432"
