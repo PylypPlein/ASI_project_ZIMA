@@ -1,22 +1,16 @@
 FROM python:3.11.13-slim
 
-# Ustawiamy katalog roboczy
 WORKDIR /app
 
-# Kopiujemy wymagania, kod i modele
-COPY requirements.txt .
 COPY src ./src
 COPY data/06_models ./data/06_models
 
-# Instalacja niezbędnych zależności systemowych
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gcc \
         libpq-dev \
 && rm -rf /var/lib/apt/lists/*
 
-# Instalacja pakietów Python w jednym kroku
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir \
         "autogluon==1.4.0" \
         fastai \
@@ -35,13 +29,10 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
         joblib \
         IPython
 
-# Środowisko
 ENV PYTHONPATH=/app/src
 ENV MODEL_PATH=/app/data/06_models/autogluon_temp_output
 ENV PYTHONUNBUFFERED=1
 
-# Port aplikacji
 EXPOSE 8000
 
-# Uruchomienie serwera
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

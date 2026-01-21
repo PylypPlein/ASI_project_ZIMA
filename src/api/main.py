@@ -4,8 +4,23 @@ from src.api.database import save_prediction
 import joblib
 import pandas as pd
 from src.api.model import predictor
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "https://ui-xxxxx.run.app",  # URL Twojego UI w Cloud Run
+    "http://localhost:8501"      # jeśli testujesz lokalne UI
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET","POST"],
+    allow_headers=["*"],
+)
 
 model = joblib.load(
     "/app/data/06_models/ag_production.pkl"
