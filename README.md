@@ -7,59 +7,25 @@
 This project analyzes airline passenger satisfaction based on demographic and service-related features.
 The goal is to build a machine learning model that predicts whether a passenger will be **satisfied** with their flight experience.
 
----
+## Goal and scope
 
-## Data Source
+The goal of this project is to build a complete educational machine learning pipeline, from raw data through model training and evaluation, to serving predictions via an API and a simple user interface.
 
-**Dataset:**
-[Airline Passenger Satisfaction Dataset — Kaggle](https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction)
+The project is intended for educational purposes.
+Its scope includes a simplified architecture, usage of a data sample, and the absence of full production-grade security mechanisms.
 
-**License:**
-The dataset “Airline Passenger Satisfaction” by TJ Klein is available on Kaggle under the license type “Other (specified in description)”.
-Since the author did not specify a standard open license, the dataset is used in this project for educational and non-commercial purposes only, in accordance with Kaggle’s Terms of Service (featuring CC0: Public Domain specification).
-Users should credit the dataset’s author when sharing or reproducing related work.
-If the dataset author later defines an explicit license, those terms shall take precedence.
+## Architecture (high-level)
 
-**Date of Download:** October 16, 2025
+The project consists of the following components:
 
-**Description:**
-The dataset contains information about airline passengers — including age, class, customer type, flight distance, service ratings, and overall satisfaction.
-The target variable `satisfaction` has two possible values:
-- `Satisfied`
-- `Neutral or dissatisfied`
+Data -> Kedro pipeline -> model training -> artifact storage -> API (FastAPI) -> UI (Streamlit) -> prediction storage (SQLite)
 
-The goal of this project is to **predict passenger satisfaction** based on their demographic characteristics and flight experience.
-
-**Sample size:**
-A sample of 1000 rows was included in the repository
-(`ASI_project_ZIMA/data/01_raw
-/sample_dummy.csv
-`).
-
----
-
-## Selected Evaluation Metric
-
-**Metric:** `F1-score`
-
-**Justification:**
-The dataset is **slightly imbalanced** (most passengers are not satisfied).
-The **F1-score** metric balances **precision** and **recall**, providing a more reliable evaluation of model performance than simple accuracy.
-It helps assess how well the classifier identifies both satisfied and dissatisfied passengers.
-
----
+The ML pipeline and experiments are tracked using Weights & Biases (W&B).
+The API and UI can be run locally or deployed to Google Cloud Run.
 
 ## Project Structure
 
-## Kedro quickstart
-Kedro project path = ASI_project_ZIMA\tmp_kedro\satisfaction-prediction
-kedro run
-# lub
-kedro run --pipeline second_sprint_pipeline
-
-# satisfaction-prediction
-
-[![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
+The project follows a standard Kedro repository layout.
 
 ## Overview
 
@@ -90,7 +56,7 @@ pip install -r requirements.txt
 
 You can run your Kedro project with:
 
-```
+```bash
 kedro run
 ```
 
@@ -109,6 +75,8 @@ You can configure the coverage threshold in your project's `pyproject.toml` file
 To see and update the dependency requirements for your project use `requirements.txt`. Install the project requirements with `pip install -r requirements.txt`.
 
 [Further information about project dependencies](https://docs.kedro.org/en/stable/kedro_project_setup/dependencies.html#project-specific-dependencies)
+
+
 
 ## How to work with Kedro and notebooks
 
@@ -158,6 +126,75 @@ To automatically strip out all output cell contents before committing to `git`, 
 
 [Further information about building project documentation and packaging your project](https://docs.kedro.org/en/stable/tutorial/package_a_project.html)
 
+---
+
+## Data Source
+
+**Dataset:**
+[Airline Passenger Satisfaction Dataset — Kaggle](https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction)
+
+**License:**
+The dataset “Airline Passenger Satisfaction” by TJ Klein is available on Kaggle under the license type “Other (specified in description)”.
+Since the author did not specify a standard open license, the dataset is used in this project for educational and non-commercial purposes only, in accordance with Kaggle’s Terms of Service (featuring CC0: Public Domain specification).
+Users should credit the dataset’s author when sharing or reproducing related work.
+If the dataset author later defines an explicit license, those terms shall take precedence.
+
+**Date of Download:** October 16, 2025
+
+**Description:**
+The dataset contains information about airline passengers — including age, class, customer type, flight distance, service ratings, and overall satisfaction.
+The target variable `satisfaction` has two possible values:
+- `Satisfied`
+- `Neutral or dissatisfied`
+
+The goal of this project is to **predict passenger satisfaction** based on their demographic characteristics and flight experience.
+
+**Sample size:**
+A sample of 1000 rows was included in the repository
+(`ASI_project_ZIMA/data/01_raw
+/sample_dummy.csv
+`).
+
+---
+
+## Selected Evaluation Metric
+
+**Metric:** `F1-score`
+
+**Justification:**
+The dataset is **slightly imbalanced** (most passengers are not satisfied).
+The **F1-score** metric balances **precision** and **recall**, providing a more reliable evaluation of model performance than simple accuracy.
+It helps assess how well the classifier identifies both satisfied and dissatisfied passengers.
+
+---
+
+## Kedro Quickstart
+
+```bash
+kedro run
+# or
+kedro run --pipeline second_sprint_pipeline
+```
+
+[![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
+
+## Pipeline (Kedro)
+
+The project uses the Kedro framework to structure the machine learning pipeline.
+
+- Configuration is stored in the `conf/` directory
+  (`conf/base/catalog.yml`, `conf/base/parameters.yml`)
+- The main pipeline is responsible for:
+  - loading input data,
+  - preprocessing,
+  - model training,
+  - evaluation and artifact persistence
+
+Artifacts such as trained models and metrics are stored in the `data/` directory.
+
+
+
+
 ## Experiment Tracking with Weights & Biases (W&B)
 
 During Sprint 2, experiment tracking was implemented using **Weights & Biases (W&B)**.
@@ -173,9 +210,9 @@ Each time the Kedro pipeline is executed (`kedro run`), model training and evalu
    pip install wandb
 Log in to your W&B account:
 
-
-
+```bash
 wandb login
+```
 You can find your API key here: https://wandb.ai
 
 Run the Kedro pipeline:
@@ -225,15 +262,35 @@ feature statistics calculated across all runs:
 | 0.010341324664770557 | 0.0011524382609420466 | 0.000018204969860999455 | 5 | 0.01271421097243972 | 0.007968438357101393 |
 | 0.004835432750914382 | 0.0035143028541957683 | 0.01852570632669658 | 5 | 0.01207143090053079 | -0.0024005653987020275 |
 
+
+## Model and Model Card
+
+A machine learning classification model is used to predict passenger satisfaction.
+
+A detailed description of the model, evaluation metrics, assumptions, and known limitations is provided in:
+
+docs/model_card.md
+
+## Environment and installation
+
+The project is developed using Python.
+Dependencies are managed via `requirements.txt` and `environment.yml`.
+
+Example setup using Conda:
+```bash
+conda env create -f environment.yml
+conda activate ASI_project_ZIMA
+```
+
 ## Local development (without Docker)
 
-## run
+### Run API
 uvicorn src.api.main:app --reload --port 8000
 
-## test health
+### Health check
 curl http://127.0.0.1:8000/healthz
 
-## prediction
+### Prediction
 curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
@@ -264,8 +321,12 @@ curl -X POST "http://127.0.0.1:8000/predict" \
   }'
 
 # database
-sqlite3 local.db 'select * from predictions limit 5;'
+sqlite3 data/predictions.db 'select * from predictions limit 5;'
 
+### Run UI
+```bash
+streamlit run src/ui/app.py
+```
 ---
 
 ## API & Application Deployment 
@@ -305,7 +366,7 @@ The application is fully containerized using **Docker** and orchestrated with
 
 - `api` – FastAPI backend with the ML model
 - `ui` – Streamlit-based frontend
-- `db` – PostgreSQL database for storing predictions
+- `db` – PostgreSQL database used when running via Docker Compose
 
 All services run within a shared Docker network, enabling seamless communication without manual configuration. Environment variables are used to configure model paths, database connections, and API endpoints.
 
@@ -322,14 +383,15 @@ curl http://localhost:8000/healthz
 
 ## UI:
 open http://localhost:8501
-## DB (psql):
-docker exec -it <container_db> psql -U app -d appdb -c "select * from predictions limit 5;"
 
-### Database credentials (educational setup)
+Predictions are stored in a database depending on the execution mode.
+When running the application locally without Docker or in cloud deployment, a lightweight SQLite database is used.
+When running the full stack via Docker Compose, PostgreSQL is used.
+The database file is created automatically on first run.
 
-For simplicity and educational purposes, the database uses default
-PostgreSQL credentials defined directly in the `docker-compose.yml` file:
-
+```md
+Example PostgreSQL environment variables used in Docker Compose:
+```
 ```yaml
 environment:
   POSTGRES_USER: app
@@ -338,4 +400,5 @@ environment:
 ```
 In real-world applications, such credentials should be replaced with secure, project-specific values stored outside the source code.
 
-An example `.env.example` file is provided to illustrate how these values can be externalized in a production setup.
+An example `.env.example` file is provided for documentation purposes only.
+No secrets are committed to the repository.
