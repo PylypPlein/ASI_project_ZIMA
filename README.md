@@ -402,3 +402,59 @@ In real-world applications, such credentials should be replaced with secure, pro
 
 An example `.env.example` file is provided for documentation purposes only.
 No secrets are committed to the repository.
+
+## Cloud demo (Google Cloud Run)
+
+The application is deployed to Google Cloud Run and consists of two public services: a FastAPI backend serving the machine learning model and a Streamlit frontend providing a simple user interface.
+
+### API (FastAPI)
+
+Base URL: https://api-259109732883.europe-central2.run.app  
+Health check endpoint: GET /status  
+Prediction endpoint: POST /predict  
+
+Example request payload:
+```json
+{
+  "lp": 1001,
+  "id": 1001,
+  "Gender": "Male",
+  "Customer Type": "Loyal Customer",
+  "Age": 30,
+  "Type of Travel": "Business travel",
+  "Class": "Business",
+  "Flight Distance": 200,
+  "Inflight wifi service": 5,
+  "Departure/Arrival time convenient": 5,
+  "Ease of Online booking": 5,
+  "Gate location": 5,
+  "Food and drink": 5,
+  "Online boarding": 5,
+  "Seat comfort": 5,
+  "Inflight entertainment": 5,
+  "On-board service": 5,
+  "Leg room service": 5,
+  "Baggage handling": 5,
+  "Checkin service": 5,
+  "Inflight service": 5,
+  "Cleanliness": 5,
+  "Departure Delay in Minutes": 0,
+  "Arrival Delay in Minutes": 0.0
+}
+```
+
+### UI (Streamlit)
+
+The user interface is available at https://ui-259109732883.europe-central2.run.app and communicates with the backend API using the API_URL environment variable pointing to the Cloud Run API service.
+
+### Monitoring and diagnostics
+
+Basic service health can be verified using the /status endpoint. Application logs are available in Google Cloud Console under Cloud Logging with the resource type set to Cloud Run Revision and service set to either api or ui.
+
+### Cost configuration
+
+The services are configured to minimize operational costs by using min-instances = 0, small CPU and memory limits, and a short request timeout.
+
+### Health check notes
+
+The API exposes a standard /healthz endpoint for local development. In Google Cloud Run, /healthz is reserved for internal platform checks and returns 404, therefore a separate /status endpoint is used for external health monitoring.
