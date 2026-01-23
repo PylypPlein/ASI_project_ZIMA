@@ -285,12 +285,15 @@ conda activate ASI_project_ZIMA
 ## Local development (without Docker)
 
 ### Run API
+```bash
 uvicorn src.api.main:app --reload --port 8000
-
+```
 ### Health check
+```bash
 curl http://127.0.0.1:8000/healthz
-
+```
 ### Prediction
+```bash
 curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
@@ -319,9 +322,11 @@ curl -X POST "http://127.0.0.1:8000/predict" \
    "Departure Delay in Minutes": 0,
    "Arrival Delay in Minutes": 0.0
   }'
-
+```
 # database
+```bash
 sqlite3 data/predictions.db 'select * from predictions limit 5;'
+```
 
 ### Run UI
 ```bash
@@ -379,11 +384,13 @@ docker-compose up --build
 ```
 
 ## API:
+```bash
 curl http://localhost:8000/healthz
-
+```
 ## UI:
+```bash
 open http://localhost:8501
-
+```
 Predictions are stored in a database depending on the execution mode.
 When running the application locally without Docker or in cloud deployment, a lightweight SQLite database is used.
 When running the full stack via Docker Compose, PostgreSQL is used.
@@ -409,9 +416,12 @@ The application is deployed to Google Cloud Run and consists of two public servi
 
 ### API (FastAPI)
 
-Base URL: https://api-259109732883.europe-central2.run.app  
-Health check endpoint: GET /status  
-Prediction endpoint: POST /predict  
+Base URL: ```https://api-259109732883.europe-central2.run.app```
+
+Health check endpoint: ```GET /status```
+
+
+Prediction endpoint: ```POST /predict```  
 
 Example request payload:
 ```json
