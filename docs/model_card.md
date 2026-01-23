@@ -46,11 +46,22 @@ The model achieves high discriminative performance and reliably ranks satisfied 
 - Communicate limitations clearly to stakeholders.
 
 ## Versioning
-- **W&B Run:** https://wandb.ai/s27634-pjatk/asi-ml-satisfaction?nw=nwusers27634
-- **Model Artifact:** ag_model:v2
-- **Code Commit:** `05f9a57` Sprint 3 – AutoGluon + W&B integration
-- **Data Version:** `[sample.csv](../data/01_raw/sample.csv)`
-- **Environment:** Python 3.11, AutoGluon 1.x, scikit-learn 1.5
+
+- **Deployment stage:** Production (Google Cloud Run)
+- **Model artifact:** AutoGluon model promoted to alias `production`
+- **Model source:** Trained and tracked using Weights & Biases (W&B) during the experimentation phase
+- **W&B Project:** https://wandb.ai/s27634-pjatk/asi-ml-satisfaction
+- **Code version:** Git tag `v1.0` (Sprint 6 release)
+- **Docker images:**
+  - API: europe-central2-docker.pkg.dev/<PROJECT_ID>/ml-product/api:v1
+  - UI: europe-central2-docker.pkg.dev/<PROJECT_ID>/ml-product/ui:v1
+- **Runtime environment:** Python 3.11, AutoGluon 1.x, FastAPI, Streamlit
+- **Data version:** Sample dataset (`data/01_raw/sample_dummy.csv`)
+
+
+Weights & Biases was used for experiment tracking and model comparison during development sprints. The production deployment uses a fixed, pretrained model packaged with the API Docker image and does not require W&B at runtime.
+
+
 
 ## Links
 - **W&B Comparison Dashboard:** https://wandb.ai/s27634-pjatk/asi-ml-satisfaction?nw=nwusers27634
